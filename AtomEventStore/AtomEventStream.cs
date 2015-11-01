@@ -57,12 +57,14 @@ namespace Grean.AtomEventStore
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1711:IdentifiersShouldNotHaveIncorrectSuffix", Justification = "Suppressed on common vote by Mark Seemann and Mikkel Christensen, 2013-05-09. See also http://bit.ly/13ioVAG")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix", Justification = "Suppressed following discussion at http://bit.ly/11T4eZe")]
     [Obsolete("If you need Last-In, First-Out enumeration of events, please submit a pull request for issue #83 (https://github.com/GreanTech/AtomEventStore/issues/83). If you need First-In, First-Out enumeration of events, please use FifoEvents<T>.")]
-    public class AtomEventStream<T> : IEnumerable<T>, IObserver<T>
+    public class AtomEventStream<TId, T> : IEnumerable<T>, IObserver<T>
+        where TId : IIri
     {
-        private readonly UuidIri id;
+        private readonly TId id;
         private readonly IAtomEventStorage storage;
         private readonly int pageSize;
         private readonly IContentSerializer serializer;
+        private readonly IIriParser iriParser;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AtomEventStream{T}" />
@@ -102,20 +104,24 @@ namespace Grean.AtomEventStore
         /// <seealso cref="AtomEventsInFiles" />
         /// <seealso cref="IAtomEventStorage" />
         public AtomEventStream(
-            UuidIri id,
+            TId id,
             IAtomEventStorage storage,
             int pageSize,
-            IContentSerializer contentSerializer)
+            IContentSerializer contentSerializer,
+            IIriParser iriParser)
         {
             if (storage == null)
                 throw new ArgumentNullException("storage");
             if (contentSerializer == null)
                 throw new ArgumentNullException("contentSerializer");
+            if (iriParser == null)
+                throw new ArgumentNullException("iriParser");
             
             this.id = id;
             this.storage = storage;
             this.pageSize = pageSize;
             this.serializer = contentSerializer;
+            this.iriParser = iriParser;
         }
 
         /// <summary>
@@ -206,10 +212,9 @@ namespace Grean.AtomEventStore
 
         private AtomFeed ReadIndex()
         {
-            var indexAddress =
-                new Uri(((Guid)this.id).ToString(), UriKind.Relative);
+            var indexAddress = this.id.ToUri(UriKind.Relative);
             using (var r = this.storage.CreateFeedReaderFor(indexAddress))
-                return AtomFeed.ReadFrom(r, this.serializer);
+                return AtomFeed.ReadFrom(r, this.serializer, this.iriParser);
         }
 
         private static AtomEntry CreateEntry(T @event, DateTimeOffset now)
@@ -241,7 +246,7 @@ namespace Grean.AtomEventStore
         {
             return new AtomFeed(
                 this.id,
-                "Index of event stream " + (Guid)id,
+                "Index of event stream " + id.GetId(),
                 now,
                 new AtomAuthor("Grean"),
                 entries,
@@ -299,7 +304,7 @@ namespace Grean.AtomEventStore
         /// constructor.
         /// </value>
         /// <seealso cref="AtomEventStream{T}(UuidIri, IAtomEventStorage, int, IContentSerializer)" />
-        public UuidIri Id
+        public TId Id
         {
             get { return this.id; }
         }
@@ -432,7 +437,7 @@ namespace Grean.AtomEventStore
                 return null;
 
             using (var r = this.storage.CreateFeedReaderFor(previousLink.Href))
-                return AtomFeed.ReadFrom(r, this.serializer);
+                return AtomFeed.ReadFrom(r, this.serializer, this.iriParser);
         }
 
         /// <summary>

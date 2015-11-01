@@ -8,7 +8,7 @@ open Ploeh.AutoFixture.Xunit
 
 type AtomStorageInMemoryCustomization() =
     let id = UuidIri.NewId()
-    let storage = new AtomEventsInMemory()
+    let storage = new AtomEventsInMemory(new UuidIriParser())
     interface ICustomization with
         member this.Customize fixture =
             fixture.Inject<IAtomEventStorage> storage

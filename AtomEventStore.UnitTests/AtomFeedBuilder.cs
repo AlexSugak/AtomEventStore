@@ -25,7 +25,7 @@ namespace Grean.AtomEventStore.UnitTests
                 .WithEntries(this.entryBuilders.Select(b => b.Build()))
                 .AddLink(AtomLink.CreateSelfLink(
                     new Uri(
-                        ((Guid)this.feed.Id).ToString(),
+                        ((UuidIri)this.feed.Id).ToString(),
                         UriKind.Relative)));
         }
 

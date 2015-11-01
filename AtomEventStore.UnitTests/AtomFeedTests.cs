@@ -20,7 +20,7 @@ namespace Grean.AtomEventStore.UnitTests
         [Theory, AutoAtomData]
         public void IdIsCorrect([Frozen]UuidIri expected, AtomFeed sut)
         {
-            UuidIri actual = sut.Id;
+            UuidIri actual = (UuidIri)sut.Id;
             Assert.Equal(expected, actual);
         }
 
@@ -197,7 +197,7 @@ namespace Grean.AtomEventStore.UnitTests
             using (var sr = new StringReader(expected.ToXmlString(serializer)))
             using (var r = XmlReader.Create(sr))
             {
-                AtomFeed actual = AtomFeed.ReadFrom(r, serializer);
+                AtomFeed actual = AtomFeed.ReadFrom(r, serializer, new UuidIriParser());
                 Assert.Equal(expected, actual, new AtomFeedComparer());
             }
         }
@@ -223,7 +223,7 @@ namespace Grean.AtomEventStore.UnitTests
             var expected = builder.Build();
             var xml = expected.ToXmlString(serializer);
 
-            AtomFeed actual = AtomFeed.Parse(xml, serializer);
+            AtomFeed actual = AtomFeed.Parse(xml, serializer, new UuidIriParser());
 
             Assert.Equal(expected, actual, new AtomFeedComparer());
         }

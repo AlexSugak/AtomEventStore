@@ -24,7 +24,7 @@ namespace Grean.AtomEventStore
     /// </remarks>
     public class AtomFeed : IXmlWritable
     {
-        private readonly UuidIri id;
+        private readonly IIri id;
         private readonly string title;
         private readonly DateTimeOffset updated;
         private readonly AtomAuthor author;
@@ -59,7 +59,7 @@ namespace Grean.AtomEventStore
         /// is <see langword="null" />.
         /// </exception>
         public AtomFeed(
-            UuidIri id,
+            IIri id,
             string title, 
             DateTimeOffset updated,
             AtomAuthor author,
@@ -90,7 +90,7 @@ namespace Grean.AtomEventStore
         /// The ID of the Atom Feed as originally supplied via the constructor.
         /// </value>
         /// <seealso cref="AtomFeed(UuidIri, string, DateTimeOffset, AtomAuthor, IEnumerable{AtomEntry}, IEnumerable{AtomLink})" />
-        public UuidIri Id
+        public IIri Id
         {
             get { return this.id; }
         }
@@ -287,7 +287,7 @@ namespace Grean.AtomEventStore
 
             xmlWriter.WriteStartElement("feed", "http://www.w3.org/2005/Atom");
 
-            xmlWriter.WriteElementString("id", this.id.ToString());
+            xmlWriter.WriteElementString("id", this.id.GetId());
 
             xmlWriter.WriteStartElement("title");
             xmlWriter.WriteAttributeString("type", "text");
@@ -342,10 +342,14 @@ namespace Grean.AtomEventStore
         /// </exception>
         public static AtomFeed ReadFrom(
             XmlReader xmlReader,
-            IContentSerializer serializer)
+            IContentSerializer serializer,
+            IIriParser iriParser)
         {
             if (serializer == null)
                 throw new ArgumentNullException("serializer");
+
+            if (iriParser == null)
+                throw new ArgumentNullException("iriParser");
 
             var navigator = new XPathDocument(xmlReader).CreateNavigator();
 
@@ -370,7 +374,7 @@ namespace Grean.AtomEventStore
                 .Select("/atom:feed/atom:link", resolver).Cast<XPathNavigator>();
 
             return new AtomFeed(
-                UuidIri.Parse(id),
+                iriParser.Parse(id),
                 title,
                 DateTimeOffset.Parse(updated, CultureInfo.InvariantCulture),
                 AtomAuthor.ReadFrom(author),
@@ -428,7 +432,10 @@ namespace Grean.AtomEventStore
         /// <exception cref="System.ArgumentNullException">
         /// <paramref name="serializer" /> is <see langword="null" />.
         /// </exception>
-        public static AtomFeed Parse(string xml, IContentSerializer serializer)
+        public static AtomFeed Parse(
+            string xml, 
+            IContentSerializer serializer,
+            IIriParser iriParser)
         {
             if (serializer == null)
                 throw new ArgumentNullException("serializer");
@@ -439,7 +446,7 @@ namespace Grean.AtomEventStore
                 using (var r = XmlReader.Create(sr))
                 {
                     sr = null;
-                    return AtomFeed.ReadFrom(r, serializer);
+                    return AtomFeed.ReadFrom(r, serializer, iriParser);
                 }
             }
             finally

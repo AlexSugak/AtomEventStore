@@ -15,16 +15,17 @@ namespace Grean.AtomEventStore.UnitTests.Demo.AcyclicVisitor
         {
             var eventStreamId =
                 new Guid("A0E50259-7345-48F9-84B4-BEEB5CEC662C");
-            using (var storage = new AtomEventsInMemory())
+            using (var storage = new AtomEventsInMemory(new UuidIriParser()))
             {
                 var pageSize = 25;
                 var serializer = DataContractContentSerializer.Scan(
                     typeof(UserCreated).Assembly);
                 IObserver<object> obs = new AtomEventObserver<object>(
-                    eventStreamId, // a Guid
+                    new UuidIri(eventStreamId), // a Guid
                     pageSize,      // an Int32
                     storage,       // an IAtomEventStorage object
-                    serializer);   // an IContentSerializer object
+                    serializer,
+                    new UuidIriParser());   // an IContentSerializer object
 
                 var userCreated = new UserCreated
                 {
@@ -44,16 +45,17 @@ namespace Grean.AtomEventStore.UnitTests.Demo.AcyclicVisitor
         {
             var eventStreamId =
                 new Guid("A0E50259-7345-48F9-84B4-BEEB5CEC662C");
-            using (var storage = new AtomEventsInMemory())
+            using (var storage = new AtomEventsInMemory(new UuidIriParser()))
             {
                 var pageSize = 25;
                 var serializer = DataContractContentSerializer.Scan(
                     typeof(UserCreated).Assembly);
                 var obs = new AtomEventObserver<object>(
-                    eventStreamId, // a Guid
+                    new UuidIri(eventStreamId), // a Guid
                     pageSize,      // an Int32
                     storage,       // an IAtomEventStorage object
-                    serializer);   // an IContentSerializer object
+                    serializer,
+                    new UuidIriParser());   // an IContentSerializer object
 
                 var userCreated = new UserCreated
                 {
@@ -73,16 +75,17 @@ namespace Grean.AtomEventStore.UnitTests.Demo.AcyclicVisitor
         {
             var eventStreamId =
                 new Guid("A0E50259-7345-48F9-84B4-BEEB5CEC662C");
-            using (var storage = new AtomEventsInMemory())
+            using (var storage = new AtomEventsInMemory(new UuidIriParser()))
             {
                 var pageSize = 25;
                 var serializer = DataContractContentSerializer.Scan(
                     typeof(UserCreated).Assembly);
                 var obs = new AtomEventObserver<object>(
-                    eventStreamId,
+                    new UuidIri(eventStreamId),
                     pageSize,
                     storage,
-                    serializer);
+                    serializer,
+                    new UuidIriParser());
                 var userCreated = new UserCreated
                 {
                     UserId = eventStreamId,
@@ -95,7 +98,8 @@ namespace Grean.AtomEventStore.UnitTests.Demo.AcyclicVisitor
                 IEnumerable<object> events = new FifoEvents<object>(
                     eventStreamId, // a Guid
                     storage,       // an IAtomEventStorage object
-                    serializer);   // an IContentSerializer object
+                    serializer,
+                    new UuidIriParser());   // an IContentSerializer object
                 var firstEvent = events.First();
 
                 var uc = Assert.IsAssignableFrom<UserCreated>(firstEvent);
@@ -108,7 +112,7 @@ namespace Grean.AtomEventStore.UnitTests.Demo.AcyclicVisitor
         {
             var eventStreamId =
                 new Guid("A0E50259-7345-48F9-84B4-BEEB5CEC662C");
-            using (var storage = new AtomEventsInMemory())
+            using (var storage = new AtomEventsInMemory(new UuidIriParser()))
             {
                 var pageSize = 25;
                 /* This is an example of how to use the TypeResolutionEntry
@@ -130,10 +134,11 @@ namespace Grean.AtomEventStore.UnitTests.Demo.AcyclicVisitor
                             typeof(EmailChanged)));
                 var serializer = new DataContractContentSerializer(resolver);
                 var obs = new AtomEventObserver<object>(
-                    eventStreamId,
+                    new UuidIri(eventStreamId),
                     pageSize,
                     storage,
-                    serializer);
+                    serializer,
+                    new UuidIriParser());
                 obs.OnNext(new UserCreated
                 {
                     UserId = eventStreamId,
@@ -155,7 +160,8 @@ namespace Grean.AtomEventStore.UnitTests.Demo.AcyclicVisitor
                 var events = new FifoEvents<object>(
                     eventStreamId, // a Guid
                     storage,       // an IAtomEventStorage object
-                    serializer);   // an IContentSerializer object
+                    serializer,
+                    new UuidIriParser());   // an IContentSerializer object
                 var user = User.Fold(events);
 
                 Assert.Equal(eventStreamId, user.Id);

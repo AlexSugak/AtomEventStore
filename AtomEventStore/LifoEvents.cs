@@ -49,9 +49,10 @@ namespace Grean.AtomEventStore
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix", Justification = "Suppressed following discussion at http://bit.ly/11T4eZe")]
     public class LifoEvents<T> : IEnumerable<T>
     {
-        private readonly UuidIri id;
+        private readonly IIri id;
         private readonly IAtomEventStorage storage;
         private readonly IContentSerializer serializer;
+        private readonly IIriParser iriParser;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LifoEvents{T}" />
@@ -91,18 +92,22 @@ namespace Grean.AtomEventStore
         /// <seealso cref="AtomEventsInFiles" />
         /// <seealso cref="IAtomEventStorage" />
         public LifoEvents(
-            UuidIri id,
+            IIri id,
             IAtomEventStorage storage,
-            IContentSerializer serializer)
+            IContentSerializer serializer,
+            IIriParser iriParser)
         {
             if (storage == null)
                 throw new ArgumentNullException("storage");
             if (serializer == null)
                 throw new ArgumentNullException("serializer");
+            if (iriParser == null)
+                throw new ArgumentNullException("iriParser");
 
             this.id = id;
             this.storage = storage;
             this.serializer = serializer;
+            this.iriParser = iriParser;
         }
 
         /// <summary>
@@ -178,7 +183,7 @@ namespace Grean.AtomEventStore
         /// </returns>
         public IEnumerable<T> Reverse()
         {
-            return new FifoEvents<T>(this.id, this.storage, this.serializer);
+            return new FifoEvents<T>(this.id, this.storage, this.serializer, this.iriParser);
         }
 
         private AtomFeed ReadLast()
@@ -205,7 +210,7 @@ namespace Grean.AtomEventStore
         {
             var indexAddress =
                 new Uri(
-                    ((Guid)this.id) + "/" + ((Guid)this.id),
+                    (this.id.GetIdValue()) + "/" + (this.id.GetIdValue()),
                     UriKind.Relative);
             return this.ReadPage(indexAddress);
         }
@@ -226,7 +231,7 @@ namespace Grean.AtomEventStore
         private AtomFeed ReadPage(Uri address)
         {
             using (var r = this.storage.CreateFeedReaderFor(address))
-                return AtomFeed.ReadFrom(r, this.serializer);
+                return AtomFeed.ReadFrom(r, this.serializer, this.iriParser);
         }
 
         /// <summary>
@@ -237,7 +242,7 @@ namespace Grean.AtomEventStore
         /// constructor.
         /// </value>
         /// <seealso cref="LifoEvents{T}(UuidIri, IAtomEventStorage, IContentSerializer)" />
-        public UuidIri Id
+        public IIri Id
         {
             get { return this.id; }
         }

@@ -6,6 +6,38 @@ using System.Text;
 
 namespace Grean.AtomEventStore
 {
+    public interface IIriParser
+    {
+        IIri Parse(string idString);
+        IIri Parse(Uri uri);
+    }
+
+    public class UuidIriParser : IIriParser
+    {
+        public IIri Parse(string idString)
+        {
+            return UuidIri.Parse(idString);
+        }
+
+        public IIri Parse(Uri uri)
+        {
+            return UuidIri.FromUri(uri);
+        }
+    }
+
+    public interface IIri
+    {
+        string GetIdValue();
+        string GetId();
+        Uri ToUri(UriKind kind);
+    }
+
+    public interface IIri<T> : IIri, IEquatable<T>
+        where T : IIri<T>
+    {
+    }
+
+
     /// <summary>
     /// A UUID IRI (Universally Unique IDentifier Internationalized Resource
     /// Identifier)
@@ -33,7 +65,7 @@ namespace Grean.AtomEventStore
     /// conversions are lossless both ways.
     /// </para>
     /// </remarks>
-    public struct UuidIri : IEquatable<UuidIri>
+    public struct UuidIri : IIri<UuidIri>
     {
         private const string prefix = "urn:uuid:";
         private readonly Guid id;
@@ -243,6 +275,29 @@ namespace Grean.AtomEventStore
         public override int GetHashCode()
         {
             return this.id.GetHashCode();
+        }
+
+        public Uri ToUri(UriKind kind)
+        {
+            return new Uri(((Guid)this).ToString(), kind);
+        }
+
+        public string GetId()
+        {
+            return this.ToString();
+        }
+
+        public string GetIdValue()
+        {
+            return this.id.ToString();
+        }
+
+        public static IIri FromUri(Uri href)
+        {
+            var segments = AtomEventStorage.GetSegmentsFrom(href);
+            // The ID is assumed to be contained in the last segment of the URL
+            var lastSegment = segments.Last();
+            return new UuidIri(new Guid(lastSegment));
         }
     }
 }

@@ -22,21 +22,26 @@ namespace Grean.AtomEventStore
     /// </para>
     /// </remarks>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix", Justification = "Suppressed following discussion at http://bit.ly/11T4eZe")]
-    public class AtomEventsInMemory : IAtomEventStorage, IEnumerable<UuidIri>, IDisposable
+    public class AtomEventsInMemory : IAtomEventStorage, IEnumerable<IIri>, IDisposable
     {
         private readonly ReaderWriterLockSlim rwLock;
         private readonly Dictionary<Uri, StringBuilder> feeds;
-        private readonly List<UuidIri> indexes;
+        private readonly List<IIri> indexes;
+        private readonly IIriParser iriParser;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AtomEventsInMemory"/>
         /// class.
         /// </summary>
-        public AtomEventsInMemory()
+        public AtomEventsInMemory(IIriParser iriParser)
         {
+            if (iriParser == null)
+                throw new ArgumentNullException("iriParser");
+
             this.rwLock = new ReaderWriterLockSlim();
             this.feeds = new Dictionary<Uri, StringBuilder>();
-            this.indexes = new List<UuidIri>();
+            this.indexes = new List<IIri>();
+            this.iriParser = iriParser;
         }
 
         /// <summary>
@@ -142,7 +147,7 @@ namespace Grean.AtomEventStore
                 if (this.feeds.ContainsKey(href))
                     return CreateReaderOver(this.feeds[href].ToString());
                 else
-                    return AtomEventStorage.CreateNewFeed(href);
+                    return AtomEventStorage.CreateNewFeed(href, this.iriParser);
             }
             finally
             {
@@ -207,7 +212,7 @@ namespace Grean.AtomEventStore
         /// </remarks>
         /// <seealso cref="AtomEventObserver{T}" />
         /// <seealso cref="FifoEvents{T}" />
-        public IEnumerator<UuidIri> GetEnumerator()
+        public IEnumerator<IIri> GetEnumerator()
         {
             this.rwLock.EnterReadLock();
             try

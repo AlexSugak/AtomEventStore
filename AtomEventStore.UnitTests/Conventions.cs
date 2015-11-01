@@ -30,7 +30,7 @@ namespace Grean.AtomEventStore.UnitTests
                 && !IsStatic(t)
                 && t != typeof(AtomLink)             // Covered by AtomLinkTests
                 && t != typeof(AtomAuthor)           // Covered by AtomAuthorTests
-                && t != typeof(AtomEventStream<>)    // Covered by AtomEventStreamTests
+                && t != typeof(AtomEventStream<,>)    // Covered by AtomEventStreamTests
                 && t != typeof(AtomEventObserver<>); // Covered by AtomEventObserverTests
 #pragma warning restore 618
         }

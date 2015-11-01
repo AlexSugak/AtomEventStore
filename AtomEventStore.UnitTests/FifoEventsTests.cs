@@ -128,9 +128,9 @@ namespace Grean.AtomEventStore.UnitTests
             XmlContentSerializer serializer)
         {
             var sut =
-                new FifoEvents<XmlAttributedTestEventX>(id, storage, serializer);
+                new FifoEvents<XmlAttributedTestEventX>(id, storage, serializer, new UuidIriParser());
             var expected =
-                new LifoEvents<XmlAttributedTestEventX>(id, storage, serializer);
+                new LifoEvents<XmlAttributedTestEventX>(id, storage, serializer, new UuidIriParser());
 
             var actual = sut.Reverse();
 

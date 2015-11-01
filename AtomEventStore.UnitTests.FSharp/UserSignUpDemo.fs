@@ -83,7 +83,7 @@ module Stories =
     let ``Write a single event synchronously`` () =
         let eventStreamId = 
             Guid "1B858B8F-A29E-4C27-8880-5746584088EE" |> UuidIri.op_Implicit
-        use storage = new AtomEventsInMemory()
+        use storage = new AtomEventsInMemory(new UuidIriParser())
         let pageSize = 25
         let serializer = DataContractContentSerializer resolver
         let obs =
@@ -91,7 +91,8 @@ module Stories =
                 eventStreamId, // an UuidIri (basically, a Guid)
                 pageSize,      // an Int32
                 storage,       // an IAtomEventStorage object
-                serializer)    // an IContentSerializer object
+                serializer,
+                new UuidIriParser())    // an IContentSerializer object
         
         let userCreated = UserCreated {
             UserId = eventStreamId |> UuidIri.op_Implicit
@@ -109,7 +110,7 @@ module Stories =
     let ``Write a single event asynchronously`` () =
         let eventStreamId = 
             Guid "1B858B8F-A29E-4C27-8880-5746584088EE" |> UuidIri.op_Implicit
-        use storage = new AtomEventsInMemory()
+        use storage = new AtomEventsInMemory(new UuidIriParser())
         let pageSize = 25
         let serializer = DataContractContentSerializer resolver
         let obs =
@@ -117,7 +118,8 @@ module Stories =
                 eventStreamId, // an UuidIri (basically, a Guid)
                 pageSize,      // an Int32
                 storage,       // an IAtomEventStorage object
-                serializer)    // an IContentSerializer object
+                serializer,
+                new UuidIriParser())    // an IContentSerializer object
         
         let userCreated = UserCreated {
             UserId = eventStreamId |> UuidIri.op_Implicit
@@ -132,7 +134,7 @@ module Stories =
     let ``Read multiple events`` () =
         let eventStreamId = 
             Guid "1B858B8F-A29E-4C27-8880-5746584088EE" |> UuidIri.op_Implicit
-        use storage = new AtomEventsInMemory()
+        use storage = new AtomEventsInMemory(new UuidIriParser())
         let pageSize = 25
         let serializer = DataContractContentSerializer resolver
         let obs =
@@ -140,7 +142,8 @@ module Stories =
                 eventStreamId, // an UuidIri (basically, a Guid)
                 pageSize,      // an Int32
                 storage,       // an IAtomEventStorage object
-                serializer)    // an IContentSerializer object
+                serializer,
+                new UuidIriParser())    // an IContentSerializer object
         obs.OnNext(UserCreated {
             UserId = eventStreamId |> UuidIri.op_Implicit
             UserName = "ploeh"
@@ -157,7 +160,8 @@ module Stories =
             FifoEvents<UserEvent>(
                 eventStreamId, // an UuidIri (basically, a Guid)
                 storage,       // an IAtomEventStorage object
-                serializer)    // an IContentSerializer object
+                serializer,
+                new UuidIriParser())    // an IContentSerializer object
         let users = events |> UserEvents.foldEvents
     
         let expected = {

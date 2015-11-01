@@ -25,7 +25,7 @@ namespace Grean.AtomEventStore.UnitTests
                 expected.WriteTo(w, serializer);
             using (var r = sut.CreateFeedReaderFor(expected.Locate()))
             {
-                var actual = AtomFeed.ReadFrom(r, serializer);
+                var actual = AtomFeed.ReadFrom(r, serializer, new UuidIriParser());
 
                 Assert.Equal(expected, actual, new AtomFeedComparer());
             }
@@ -48,7 +48,7 @@ namespace Grean.AtomEventStore.UnitTests
 
             using (var r = sut.CreateFeedReaderFor(expected.Locate()))
             {
-                var actual = AtomFeed.ReadFrom(r, serializer);
+                var actual = AtomFeed.ReadFrom(r, serializer, new UuidIriParser());
 
                 Assert.Equal(expected, actual, new AtomFeedComparer());
             }
@@ -71,7 +71,7 @@ namespace Grean.AtomEventStore.UnitTests
 
             using (var r = sut.CreateFeedReaderFor(expected.Locate()))
             {
-                var actual = AtomFeed.ReadFrom(r, serializer);
+                var actual = AtomFeed.ReadFrom(r, serializer, new UuidIriParser());
 
                 Assert.Equal(expected, actual, new AtomFeedComparer());
             }
@@ -91,7 +91,7 @@ namespace Grean.AtomEventStore.UnitTests
 
             using (var r = sut.CreateFeedReaderFor(expectedSelfLink.Href))
             {
-                var actual = AtomFeed.ReadFrom(r, dummySerializer);
+                var actual = AtomFeed.ReadFrom(r, dummySerializer, new UuidIriParser());
 
                 Assert.Equal(id, actual.Id);
                 Assert.Equal("Index of event stream " + (Guid)id, actual.Title);
@@ -128,7 +128,7 @@ namespace Grean.AtomEventStore.UnitTests
                 using (var w = sut.CreateFeedWriterFor(f))
                     f.WriteTo(w, serializer);
 
-            var actual = sut.Feeds.Select(s => AtomFeed.Parse(s, serializer));
+            var actual = sut.Feeds.Select(s => AtomFeed.Parse(s, serializer, new UuidIriParser()));
 
             var expected = new HashSet<AtomFeed>(feeds, new AtomFeedComparer());
             Assert.True(
@@ -171,7 +171,7 @@ namespace Grean.AtomEventStore.UnitTests
 
             var actual = sut;
 
-            var expected = new HashSet<UuidIri>(feeds.Select(f => f.Id));
+            var expected = new HashSet<IIri>(feeds.Select(f => (IIri)f.Id));
             Assert.True(
                 expected.SetEquals(actual),
                 "AtomEventsInMemory should yield index IDs.");
@@ -206,7 +206,7 @@ namespace Grean.AtomEventStore.UnitTests
 
             var actual = sut;
 
-            var expected = new HashSet<UuidIri>(indexes.Select(f => f.Id));
+            var expected = new HashSet<IIri>(indexes.Select(f => f.Id));
             Assert.True(
                 expected.SetEquals(actual),
                 "AtomEventsInMemory should only yield index IDs.");
@@ -247,7 +247,8 @@ namespace Grean.AtomEventStore.UnitTests
                         return AtomFeed.ReadFrom(
                             r,
                             new DataContractContentSerializer(
-                                resolverStub.Object));
+                                resolverStub.Object),
+                            new UuidIriParser());
                 })
                 .ToArray();
             Task.WaitAll(tasks);

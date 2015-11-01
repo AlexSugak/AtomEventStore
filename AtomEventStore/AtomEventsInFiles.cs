@@ -14,6 +14,7 @@ namespace Grean.AtomEventStore
     public class AtomEventsInFiles : IAtomEventStorage, IEnumerable<UuidIri>
     {
         private readonly DirectoryInfo directory;
+        private readonly IIriParser iriParser;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AtomEventsInFiles"/>
@@ -31,12 +32,16 @@ namespace Grean.AtomEventStore
         /// <exception cref="System.ArgumentNullException">
         /// <paramref name="directory" /> is <see langword="null" />.
         /// </exception>
-        public AtomEventsInFiles(DirectoryInfo directory)
+        public AtomEventsInFiles(DirectoryInfo directory, IIriParser iriParser)
         {
             if (directory == null)
                 throw new ArgumentNullException("directory");
 
+            if (iriParser == null)
+                throw new ArgumentNullException("iriParser");
+
             this.directory = directory;
+            this.iriParser = iriParser;
         }
 
         /// <summary>
@@ -73,7 +78,7 @@ namespace Grean.AtomEventStore
             if (File.Exists(fileName))
                 return XmlReader.Create(fileName);
 
-            return AtomEventStorage.CreateNewFeed(href);
+            return AtomEventStorage.CreateNewFeed(href, this.iriParser);
         }
 
         /// <summary>

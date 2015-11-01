@@ -13,7 +13,6 @@ namespace Grean.AtomEventStore
     /// </summary>
     public static class AtomEventStorage
     {
-
         /// <summary>
         /// Creates a new, empty feed.
         /// </summary>
@@ -26,9 +25,9 @@ namespace Grean.AtomEventStore
         /// for the new Atom Feed.
         /// </para>
         /// </remarks>
-        public static XmlReader CreateNewFeed(Uri href)
+        public static XmlReader CreateNewFeed(Uri href, IIriParser iriParser)
         {
-            var id = GetIdFromHref(href);
+            var id = iriParser.Parse(href);
             var xml = new AtomFeed(
                 id,
                 "Index of event stream " + id,

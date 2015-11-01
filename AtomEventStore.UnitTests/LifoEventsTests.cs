@@ -129,9 +129,9 @@ namespace Grean.AtomEventStore.UnitTests
             XmlContentSerializer serializer)
         {
             var sut =
-                new LifoEvents<XmlAttributedTestEventX>(id, storage, serializer);
+                new LifoEvents<XmlAttributedTestEventX>(id, storage, serializer, new UuidIriParser());
             var expected =
-                new FifoEvents<XmlAttributedTestEventX>(id, storage, serializer);
+                new FifoEvents<XmlAttributedTestEventX>(id, storage, serializer, new UuidIriParser());
 
             var actual = sut.Reverse();
 
@@ -195,12 +195,13 @@ namespace Grean.AtomEventStore.UnitTests
         {
             return AtomFeed.Parse(
                 xml,
-                new XmlContentSerializer(new TestEventTypeResolver()));
+                new XmlContentSerializer(new TestEventTypeResolver()),
+                new UuidIriParser());
         }
 
         private static AtomFeed FindIndex(IEnumerable<AtomFeed> pages, UuidIri id)
         {
-            var index = pages.SingleOrDefault(f => f.Id == id);
+            var index = pages.SingleOrDefault(f => (UuidIri)f.Id == id);
             Assert.NotNull(index);
             return index;
         }

@@ -23,14 +23,14 @@ namespace Grean.AtomEventStore.UnitTests
         public void VerifyGuardClauses(GuardClauseAssertion assertion)
         {
             assertion.Verify(
-                typeof(AtomEventStream<DataContractTestEventX>).GetMembers()
-                    .Where(m => new Methods<AtomEventStream<DataContractTestEventX>>().Select(x => x.OnError(null)) != m));
+                typeof(AtomEventStream<UuidIri, DataContractTestEventX>).GetMembers()
+                    .Where(m => new Methods<AtomEventStream<UuidIri, DataContractTestEventX>>().Select(x => x.OnError(null)) != m));
         }
 
         [Theory, AutoAtomData]
         public void IdIsCorrect(
             [Frozen]UuidIri expected,
-            AtomEventStream<DataContractTestEventX> sut)
+            AtomEventStream<UuidIri, DataContractTestEventX> sut)
         {
             UuidIri actual = sut.Id;
             Assert.Equal(expected, actual);
@@ -39,7 +39,7 @@ namespace Grean.AtomEventStore.UnitTests
         [Theory, AutoAtomData]
         public void StorageIsCorrect(
             [Frozen]IAtomEventStorage expected,
-            AtomEventStream<DataContractTestEventX> sut)
+            AtomEventStream<UuidIri, DataContractTestEventX> sut)
         {
             IAtomEventStorage actual = sut.Storage;
             Assert.Equal(expected, actual);
@@ -48,7 +48,7 @@ namespace Grean.AtomEventStore.UnitTests
         [Theory, AutoAtomData]
         public void ContentSerializerIsCorrect(
             [Frozen]IContentSerializer expected,
-            AtomEventStream<DataContractTestEventX> sut)
+            AtomEventStream<UuidIri, DataContractTestEventX> sut)
         {
             IContentSerializer actual = sut.ContentSerializer;
             Assert.Equal(expected, actual);
@@ -126,7 +126,7 @@ namespace Grean.AtomEventStore.UnitTests
         public void AppendAsyncCorrectlyStoresFeed(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory storage,
             AtomFeedParser<XmlContentSerializer> parser,
-            AtomEventStream<XmlAttributedTestEventX> sut,
+            AtomEventStream<UuidIri, XmlAttributedTestEventX> sut,
             XmlAttributedTestEventX expectedEvent)
         {
             var before = DateTimeOffset.Now;
@@ -144,7 +144,7 @@ namespace Grean.AtomEventStore.UnitTests
         public void AppendAsyncCorrectlyStoresFeeds(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory storage,
             AtomFeedParser<XmlContentSerializer> parser,
-            AtomEventStream<XmlAttributedTestEventX> sut,
+            AtomEventStream<UuidIri, XmlAttributedTestEventX> sut,
             XmlAttributedTestEventX event1,
             XmlAttributedTestEventX event2)
         {
@@ -165,7 +165,7 @@ namespace Grean.AtomEventStore.UnitTests
         public void AppendAsyncPageSizeEventsSavesAllEntriesInIndex(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory storage,
             AtomFeedParser<XmlContentSerializer> parser,
-            AtomEventStream<XmlAttributedTestEventX> sut,
+            AtomEventStream<UuidIri, XmlAttributedTestEventX> sut,
             Generator<XmlAttributedTestEventX> eventGenerator)
         {
             var before = DateTimeOffset.Now;
@@ -187,7 +187,7 @@ namespace Grean.AtomEventStore.UnitTests
         public void AppendAsyncMoreThanPageSizeEventsOnlyStoresOverflowingEvent(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory storage,
             AtomFeedParser<XmlContentSerializer> parser,
-            AtomEventStream<XmlAttributedTestEventX> sut,
+            AtomEventStream<UuidIri, XmlAttributedTestEventX> sut,
             Generator<XmlAttributedTestEventX> eventGenerator)
         {
             var before = DateTimeOffset.Now;
@@ -197,7 +197,7 @@ namespace Grean.AtomEventStore.UnitTests
 
             var writtenIndex = storage.Feeds
                 .Select(parser.Parse)
-                .Single(f => f.Id == sut.Id);
+                .Single(f => (UuidIri)f.Id == sut.Id);
             var expectedIndex = new AtomFeedLikeness(
                 before,
                 sut.Id,
@@ -211,7 +211,7 @@ namespace Grean.AtomEventStore.UnitTests
         public void AppendAsyncMoreThanPageSizeEventsAddsLinkToPreviousPageToIndex(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory storage,
             AtomFeedParser<XmlContentSerializer> parser,
-            AtomEventStream<XmlAttributedTestEventX> sut,
+            AtomEventStream<UuidIri, XmlAttributedTestEventX> sut,
             Generator<XmlAttributedTestEventX> eventGenerator)
         {
             var before = DateTimeOffset.Now;
@@ -221,7 +221,7 @@ namespace Grean.AtomEventStore.UnitTests
 
             var writtenIndex = storage.Feeds
                 .Select(parser.Parse)
-                .Single(f => f.Id == sut.Id);
+                .Single(f => (UuidIri)f.Id == sut.Id);
             Assert.Equal(
                 1,
                 writtenIndex.Links.Count(AtomEventStream.IsPreviousFeedLink));
@@ -231,7 +231,7 @@ namespace Grean.AtomEventStore.UnitTests
         public void AppendAsyncLessThanPageSizeEventsDoesNotAddLinkToPreviousPageToIndex(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory storage,
             AtomFeedParser<XmlContentSerializer> parser,
-            AtomEventStream<XmlAttributedTestEventX> sut,
+            AtomEventStream<UuidIri, XmlAttributedTestEventX> sut,
             Generator<XmlAttributedTestEventX> eventGenerator)
         {
             var before = DateTimeOffset.Now;
@@ -241,7 +241,7 @@ namespace Grean.AtomEventStore.UnitTests
 
             var writtenIndex = storage.Feeds
                 .Select(parser.Parse)
-                .Single(f => f.Id == sut.Id);
+                .Single(f => (UuidIri)f.Id == sut.Id);
             Assert.Equal(
                 0,
                 writtenIndex.Links.Count(AtomEventStream.IsPreviousFeedLink));
@@ -251,7 +251,7 @@ namespace Grean.AtomEventStore.UnitTests
         public void AppendAsyncMoreThanPageSizeEventsStoresPreviousPage(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory storage,
             AtomFeedParser<XmlContentSerializer> parser,
-            AtomEventStream<XmlAttributedTestEventX> sut,
+            AtomEventStream<UuidIri, XmlAttributedTestEventX> sut,
             Generator<XmlAttributedTestEventX> eventGenerator)
         {
             var before = DateTimeOffset.Now;
@@ -261,7 +261,7 @@ namespace Grean.AtomEventStore.UnitTests
 
             var writtenIndex = storage.Feeds
                 .Select(parser.Parse)
-                .Single(f => f.Id == sut.Id);
+                .Single(f => (UuidIri)f.Id == sut.Id);
             UuidIri previousPageId = 
                 Guid.Parse(
                     writtenIndex.Links
@@ -270,7 +270,7 @@ namespace Grean.AtomEventStore.UnitTests
             Assert.True(
                 storage.Feeds
                     .Select(parser.Parse)
-                    .Any(f => f.Id == previousPageId),
+                    .Any(f => (UuidIri)f.Id == previousPageId),
                 "The previous feed should have been stored.");
         }
 
@@ -278,7 +278,7 @@ namespace Grean.AtomEventStore.UnitTests
         public void AppendAsyncMoreThanPageSizeEventsStoresOldestEventsInPreviousPage(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory storage,
             AtomFeedParser<XmlContentSerializer> parser,
-            AtomEventStream<XmlAttributedTestEventX> sut,
+            AtomEventStream<UuidIri, XmlAttributedTestEventX> sut,
             Generator<XmlAttributedTestEventX> eventGenerator)
         {
             var before = DateTimeOffset.Now;
@@ -288,7 +288,7 @@ namespace Grean.AtomEventStore.UnitTests
 
             var writtenIndex = storage.Feeds
                 .Select(parser.Parse)
-                .Single(f => f.Id == sut.Id);
+                .Single(f => (UuidIri)f.Id == sut.Id);
             UuidIri previousPageId =
                 Guid.Parse(
                     writtenIndex.Links
@@ -296,7 +296,7 @@ namespace Grean.AtomEventStore.UnitTests
                         .Href.ToString());
             var actualPreviousPage = storage.Feeds
                 .Select(parser.Parse)
-                .Single(f => f.Id == previousPageId);
+                .Single(f => (UuidIri)f.Id == previousPageId);
             var expectedPreviousPage = new AtomFeedLikeness(
                 before,
                 previousPageId,
@@ -309,7 +309,7 @@ namespace Grean.AtomEventStore.UnitTests
         [Theory, AutoAtomData]
         public void AppendAsyncExactlyTwicePageSizeEventsStoresTwoFeedPages(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory storage,
-            AtomEventStream<XmlAttributedTestEventX> sut,
+            AtomEventStream<UuidIri, XmlAttributedTestEventX> sut,
             Generator<XmlAttributedTestEventX> eventGenerator)
         {
             var events = eventGenerator.Take(sut.PageSize * 2).ToList();
@@ -320,7 +320,7 @@ namespace Grean.AtomEventStore.UnitTests
         [Theory, AutoAtomData]
         public void AppendAsyncMoreThanTwicePageSizeEventsCreatesThreeFeedPages(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory storage,
-            AtomEventStream<XmlAttributedTestEventX> sut,
+            AtomEventStream<UuidIri, XmlAttributedTestEventX> sut,
             Generator<XmlAttributedTestEventX> eventGenerator)
         {
             var events = eventGenerator.Take(sut.PageSize * 2 + 1).ToList();
@@ -332,7 +332,7 @@ namespace Grean.AtomEventStore.UnitTests
         public void AppendAsyncMoreThanTwicePageSizeEventAddsPreviousLinkToMiddlePage(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory storage,
             AtomFeedParser<XmlContentSerializer> parser,
-            AtomEventStream<XmlAttributedTestEventX> sut,
+            AtomEventStream<UuidIri, XmlAttributedTestEventX> sut,
             Generator<XmlAttributedTestEventX> eventGenerator)
         {
             var before = DateTimeOffset.Now;
@@ -342,7 +342,7 @@ namespace Grean.AtomEventStore.UnitTests
 
             var writtenIndex = storage.Feeds
                 .Select(parser.Parse)
-                .Single(f => f.Id == sut.Id);
+                .Single(f => (UuidIri)f.Id == sut.Id);
             UuidIri previousPageId =
                 Guid.Parse(
                     writtenIndex.Links
@@ -350,7 +350,7 @@ namespace Grean.AtomEventStore.UnitTests
                         .Href.ToString());
             var middlePage = storage.Feeds
                 .Select(parser.Parse)
-                .Single(f => f.Id == previousPageId);
+                .Single(f => (UuidIri)f.Id == previousPageId);
             Assert.Equal(
                 1,
                 middlePage.Links.Count(AtomEventStream.IsPreviousFeedLink));
@@ -360,7 +360,7 @@ namespace Grean.AtomEventStore.UnitTests
         public void AppendAsyncTwicePageSizeEventDoesNotAddPreviousLinkToPreviousPage(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory storage,
             AtomFeedParser<XmlContentSerializer> parser,
-            AtomEventStream<XmlAttributedTestEventX> sut,
+            AtomEventStream<UuidIri, XmlAttributedTestEventX> sut,
             Generator<XmlAttributedTestEventX> eventGenerator)
         {
             var before = DateTimeOffset.Now;
@@ -370,7 +370,7 @@ namespace Grean.AtomEventStore.UnitTests
 
             var writtenIndex = storage.Feeds
                 .Select(parser.Parse)
-                .Single(f => f.Id == sut.Id);
+                .Single(f => (UuidIri)f.Id == sut.Id);
             UuidIri previousPageId =
                 Guid.Parse(
                     writtenIndex.Links
@@ -378,14 +378,14 @@ namespace Grean.AtomEventStore.UnitTests
                         .Href.ToString());
             var previousPage = storage.Feeds
                 .Select(parser.Parse)
-                .Single(f => f.Id == previousPageId);
+                .Single(f => (UuidIri)f.Id == previousPageId);
             Assert.Equal(
                 0,
                 previousPage.Links.Count(AtomEventStream.IsPreviousFeedLink));
         }
 
         [Theory, AutoAtomData]
-        public void SutIsEnumerable(AtomEventStream<DataContractTestEventY> sut)
+        public void SutIsEnumerable(AtomEventStream<UuidIri, DataContractTestEventY> sut)
         {
             Assert.IsAssignableFrom<IEnumerable<DataContractTestEventY>>(sut);
         }
@@ -393,7 +393,7 @@ namespace Grean.AtomEventStore.UnitTests
         [Theory, AutoAtomData]
         public void SutIsInitiallyEmpty(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory dummyInjectedIntoSut,
-            AtomEventStream<DataContractTestEventX> sut)
+            AtomEventStream<UuidIri, DataContractTestEventX> sut)
         {
             Assert.False(sut.Any(), "Intial event stream should be empty.");
             Assert.Empty(sut);
@@ -402,7 +402,7 @@ namespace Grean.AtomEventStore.UnitTests
         [Theory, AutoAtomData]
         public void SutYieldsCorrectEvents(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory dummyInjectedIntoSut,
-            AtomEventStream<XmlAttributedTestEventX> sut,
+            AtomEventStream<UuidIri, XmlAttributedTestEventX> sut,
             List<XmlAttributedTestEventX> events)
         {
             events.ForEach(e => sut.AppendAsync(e).Wait());
@@ -419,7 +419,7 @@ namespace Grean.AtomEventStore.UnitTests
         [Theory, AutoAtomData]
         public void SutYieldsPagedEvents(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory dummyInjectedIntoSut,
-            AtomEventStream<XmlAttributedTestEventX> sut,
+            AtomEventStream<UuidIri, XmlAttributedTestEventX> sut,
             Generator<XmlAttributedTestEventX> eventGenerator)
         {
             var events = eventGenerator.Take(sut.PageSize * 2 + 1).ToList();
@@ -438,7 +438,7 @@ namespace Grean.AtomEventStore.UnitTests
         [Theory, AutoAtomData]
         public void SutCanAppendAndYieldPolymorphicEvents(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory dummyInjectedIntoSut,
-            AtomEventStream<IXmlAttributedTestEvent> sut,
+            AtomEventStream<UuidIri, IXmlAttributedTestEvent> sut,
             XmlAttributedTestEventX tex,
             XmlAttributedTestEventY tey)
         {
@@ -452,7 +452,7 @@ namespace Grean.AtomEventStore.UnitTests
         [Theory, AutoAtomData]
         public void SutCanAppendAndYieldEnclosedPolymorphicEvents(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory dummyInjectedIntoSut,
-            AtomEventStream<DataContractEnvelope<IDataContractTestEvent>> sut,
+            AtomEventStream<UuidIri, DataContractEnvelope<IDataContractTestEvent>> sut,
             DataContractEnvelope<DataContractTestEventX> texEnvelope,
             DataContractEnvelope<DataContractTestEventY> teyEnvelope)
         {
@@ -471,7 +471,7 @@ namespace Grean.AtomEventStore.UnitTests
         }
 
         [Theory, AutoAtomData]
-        public void SutIsObserver(AtomEventStream<DataContractTestEventX> sut)
+        public void SutIsObserver(AtomEventStream<UuidIri, DataContractTestEventX> sut)
         {
             Assert.IsAssignableFrom<IObserver<DataContractTestEventX>>(sut);
         }
@@ -479,7 +479,7 @@ namespace Grean.AtomEventStore.UnitTests
         [Theory, AutoAtomData]
         public void OnNextAppendsItem(
             [Frozen(As = typeof(IAtomEventStorage))]AtomEventsInMemory dummyInjectedIntoSut,
-            AtomEventStream<XmlAttributedTestEventX> sut,
+            AtomEventStream<UuidIri, XmlAttributedTestEventX> sut,
             XmlAttributedTestEventX tex)
         {
             sut.OnNext(tex);
@@ -488,7 +488,7 @@ namespace Grean.AtomEventStore.UnitTests
 
         [Theory, AutoAtomData]
         public void OnErrorDoesNotThrow(
-            AtomEventStream<DataContractTestEventY> sut,
+            AtomEventStream<UuidIri, DataContractTestEventY> sut,
             Exception e)
         {
             Assert.DoesNotThrow(() => sut.OnError(e));
@@ -496,7 +496,7 @@ namespace Grean.AtomEventStore.UnitTests
 
         [Theory, AutoAtomData]
         public void OnCompletedDoesNotThrow(
-            AtomEventStream<DataContractTestEventY> sut)
+            AtomEventStream<UuidIri, DataContractTestEventY> sut)
         {
             Assert.DoesNotThrow(() => sut.OnCompleted());
         }
@@ -504,7 +504,7 @@ namespace Grean.AtomEventStore.UnitTests
         [Theory, AutoAtomData]
         public void AppendAsyncWritesPreviousPageBeforeIndex(
             [Frozen(As = typeof(IAtomEventStorage))]SpyAtomEventStore spyStore,
-            AtomEventStream<XmlAttributedTestEventX> sut,
+            AtomEventStream<UuidIri, XmlAttributedTestEventX> sut,
             Generator<XmlAttributedTestEventX> eventGenerator)
         {
             var events = eventGenerator.Take(sut.PageSize + 1).ToList();

@@ -41,7 +41,7 @@ namespace Grean.AtomEventStore.UnitTests
             var writtenFeeds = storage.Feeds.Select(ParseAtomFeed);
             var actual = FindFirstPage(writtenFeeds, sut.Id);
             var expectedFeed =
-                new AtomFeedLikeness(before, actual.Id, expectedEvent);
+                new AtomFeedLikeness(before, (UuidIri)actual.Id, expectedEvent);
             Assert.True(
                 expectedFeed.Equals(actual),
                 "Expected feed must match actual feed.");
@@ -84,12 +84,12 @@ namespace Grean.AtomEventStore.UnitTests
                 .Returns((Uri u) => innerStorage.CreateFeedReaderFor(u));
             storeStub
                 .Setup(s => s.CreateFeedWriterFor(
-                    It.Is<AtomFeed>(f => f.Id != sut.Id)))
+                    It.Is<AtomFeed>(f => (UuidIri)f.Id != sut.Id)))
                 .Returns((AtomFeed f) => innerStorage.CreateFeedWriterFor(f));
             var expected = new Exception("On-purpose write failure.");
             storeStub
                 .Setup(s => s.CreateFeedWriterFor(
-                    It.Is<AtomFeed>(f => f.Id == sut.Id)))
+                    It.Is<AtomFeed>(f => (UuidIri)f.Id == sut.Id)))
                 .Throws(expected);
 
             var ae = Assert.Throws<AggregateException>(() =>
@@ -119,7 +119,7 @@ namespace Grean.AtomEventStore.UnitTests
             var writtenIds = spyStore.ObservedArguments
                 .OfType<AtomFeed>()
                 .Select(f => f.Id);
-            Assert.Equal(1, writtenIds.Count(id => sut.Id == id));
+            Assert.Equal(1, writtenIds.Count(id => sut.Id == (UuidIri)id));
         }
 
         [Theory]
@@ -144,7 +144,7 @@ namespace Grean.AtomEventStore.UnitTests
             var actual = FindFirstPage(writtenFeeds, sut.Id);
             var expectedFeed = new AtomFeedLikeness(
                 before,
-                actual.Id,
+                (UuidIri)actual.Id,
                 events.AsEnumerable().Reverse().ToArray());
             Assert.True(
                 expectedFeed.Equals(actual),
@@ -174,7 +174,7 @@ namespace Grean.AtomEventStore.UnitTests
             var nextPage = FindNextPage(firstPage, writtenFeeds);
             var expectedPage = new AtomFeedLikeness(
                 before,
-                nextPage.Id,
+                (UuidIri)nextPage.Id,
                 events.AsEnumerable().Reverse().First());
             Assert.True(
                 expectedPage.Equals(nextPage),
@@ -232,7 +232,7 @@ namespace Grean.AtomEventStore.UnitTests
             var writtenIds = spyStore.ObservedArguments
                 .OfType<AtomFeed>()
                 .Select(f => f.Id);
-            Assert.Equal(2, writtenIds.Count(id => sut.Id == id));
+            Assert.Equal(2, writtenIds.Count(id => sut.Id == (UuidIri)id));
         }
 
         [Theory]
@@ -390,7 +390,7 @@ namespace Grean.AtomEventStore.UnitTests
             var nextPage = FindNextPage(firstPage, writtenFeeds);
             var expectedPage = new AtomFeedLikeness(
                 before,
-                nextPage.Id,
+                (UuidIri)nextPage.Id,
                 events.Skip(sut.PageSize).Reverse().ToArray());
             Assert.True(
                 expectedPage.Equals(nextPage),
@@ -421,7 +421,7 @@ namespace Grean.AtomEventStore.UnitTests
             nextPage = FindNextPage(nextPage, writtenFeeds);
             var expectedPage = new AtomFeedLikeness(
                 before,
-                nextPage.Id,
+                (UuidIri)nextPage.Id,
                 events.AsEnumerable().Reverse().First());
             Assert.True(
                 expectedPage.Equals(nextPage),
@@ -575,7 +575,7 @@ namespace Grean.AtomEventStore.UnitTests
 
         private static AtomFeed FindIndex(IEnumerable<AtomFeed> pages, UuidIri id)
         {
-            var index = pages.SingleOrDefault(f => f.Id == id);
+            var index = pages.SingleOrDefault(f => (UuidIri)f.Id == id);
             Assert.NotNull(index);
             return index;
         }
@@ -612,7 +612,8 @@ namespace Grean.AtomEventStore.UnitTests
         {
             return AtomFeed.Parse(
                 xml,
-                new XmlContentSerializer(new TestEventTypeResolver()));
+                new XmlContentSerializer(new TestEventTypeResolver()),
+                new UuidIriParser());
         }
 
         [Theory, AutoAtomData]

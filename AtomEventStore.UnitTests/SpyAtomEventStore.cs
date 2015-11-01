@@ -14,7 +14,7 @@ namespace Grean.AtomEventStore.UnitTests
 
         public SpyAtomEventStore()
         {
-            this.store = new AtomEventsInMemory();
+            this.store = new AtomEventsInMemory(new UuidIriParser());
             this.observedArguments = new List<object>();
         }
 

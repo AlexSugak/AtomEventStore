@@ -20,10 +20,10 @@ namespace Grean.AtomEventStore.UnitTests
             var href = new Uri(id.ToString(), UriKind.Relative);
             var before = DateTimeOffset.Now;
 
-            XmlReader actual = AtomEventStorage.CreateNewFeed(href);
+            XmlReader actual = AtomEventStorage.CreateNewFeed(href, new UuidIriParser());
 
-            var actualFeed = AtomFeed.ReadFrom(actual, dummySerializer);
-            Assert.Equal<Guid>(id, actualFeed.Id);
+            var actualFeed = AtomFeed.ReadFrom(actual, dummySerializer, new UuidIriParser());
+            Assert.Equal<Guid>(id, (UuidIri)actualFeed.Id);
             Assert.True(before <= actualFeed.Updated);
             Assert.True(actualFeed.Updated <= DateTimeOffset.Now);
             Assert.Empty(actualFeed.Entries);
@@ -41,10 +41,10 @@ namespace Grean.AtomEventStore.UnitTests
                 UriKind.Relative);
             var before = DateTimeOffset.Now;
 
-            XmlReader actual = AtomEventStorage.CreateNewFeed(href);
+            XmlReader actual = AtomEventStorage.CreateNewFeed(href, new UuidIriParser());
 
-            var actualFeed = AtomFeed.ReadFrom(actual, dummySerializer);
-            Assert.Equal<Guid>(id, actualFeed.Id);
+            var actualFeed = AtomFeed.ReadFrom(actual, dummySerializer, new UuidIriParser());
+            Assert.Equal<Guid>(id, (UuidIri)actualFeed.Id);
             Assert.True(before <= actualFeed.Updated);
             Assert.True(actualFeed.Updated <= DateTimeOffset.Now);
             Assert.Empty(actualFeed.Entries);
